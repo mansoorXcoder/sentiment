@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { MessageSquareText, Home, Search, Info } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -46,6 +47,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   </Link>
                 );
               })}
+              
+              {/* Theme Toggle */}
+              <ThemeToggle />
             </nav>
           </div>
         </div>

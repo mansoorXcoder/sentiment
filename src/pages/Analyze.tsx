@@ -1,14 +1,19 @@
 import { useState } from "react";
-import { Search, Link2, FileText, Loader2, AlertCircle, Sparkles } from "lucide-react";
+import { Search, Link2, FileText, Loader2, AlertCircle, Sparkles, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { analyzeSentiment, detectInputType, AnalysisResult } from "@/utils/sentimentAnalyzer";
+import { AlgorithmType, compareAlgorithms, ComparisonResult } from "@/utils/algorithms";
 import SentimentResult from "@/components/SentimentResult";
+import AlgorithmSelector from "@/components/AlgorithmSelector";
+import AlgorithmComparison from "@/components/AlgorithmComparison";
 
 const Analyze = () => {
   const [input, setInput] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null);
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState<AlgorithmType | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const inputType = input.trim() ? detectInputType(input) : null;
@@ -37,14 +42,22 @@ const Analyze = () => {
     setIsAnalyzing(true);
     setError(null);
     setResult(null);
+    setComparisonResult(null);
 
     try {
-      const analysisResult = await analyzeSentiment(input);
-      
-      if (analysisResult.error) {
-        setError(analysisResult.error);
+      // If algorithm is selected, run comparison
+      if (selectedAlgorithm && inputType === "text") {
+        const comparison = await compareAlgorithms(input, selectedAlgorithm);
+        setComparisonResult(comparison);
       } else {
-        setResult(analysisResult);
+        // Regular analysis for e-commerce links
+        const analysisResult = await analyzeSentiment(input);
+        
+        if (analysisResult.error) {
+          setError(analysisResult.error);
+        } else {
+          setResult(analysisResult);
+        }
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
@@ -56,6 +69,8 @@ const Analyze = () => {
   const handleClear = () => {
     setInput("");
     setResult(null);
+    setComparisonResult(null);
+    setSelectedAlgorithm(null);
     setError(null);
   };
 
@@ -79,7 +94,7 @@ const Analyze = () => {
           </p>
         </div>
 
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           {/* Input Section */}
           <div className="bg-card rounded-2xl border border-border shadow-soft-lg p-6 mb-8 animate-slide-up">
             {/* Input Area */}
@@ -118,6 +133,29 @@ const Analyze = () => {
               </div>
             </div>
 
+            {/* Algorithm Selection - Only for text input */}
+            {inputType === "text" && input.trim() && (
+              <div className="mt-6 pt-6 border-t border-border animate-fade-in">
+                <div className="flex items-center gap-2 mb-4">
+                  <Brain className="w-5 h-5 text-primary" />
+                  <h3 className="font-display font-semibold text-foreground">
+                    Select Analysis Algorithm
+                  </h3>
+                  <span className="text-xs text-muted-foreground">(optional)</span>
+                </div>
+                <AlgorithmSelector
+                  selected={selectedAlgorithm}
+                  onSelect={setSelectedAlgorithm}
+                  disabled={isAnalyzing}
+                />
+                {selectedAlgorithm && (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    ✨ All algorithms will run simultaneously, and we'll suggest the best performer!
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex items-center gap-3 mt-6">
               <Button
@@ -134,12 +172,12 @@ const Analyze = () => {
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Analyze Sentiment
+                    {selectedAlgorithm ? "Compare Algorithms" : "Analyze Sentiment"}
                   </>
                 )}
               </Button>
               
-              {(input || result) && (
+              {(input || result || comparisonResult) && (
                 <Button
                   variant="outline"
                   onClick={handleClear}
@@ -163,11 +201,19 @@ const Analyze = () => {
             </div>
           )}
 
-          {/* Results */}
-          {result && <SentimentResult result={result} />}
+          {/* Algorithm Comparison Results */}
+          {comparisonResult && selectedAlgorithm && (
+            <AlgorithmComparison 
+              comparison={comparisonResult} 
+              selectedAlgorithm={selectedAlgorithm} 
+            />
+          )}
+
+          {/* Regular Results (for e-commerce links) */}
+          {result && !comparisonResult && <SentimentResult result={result} />}
 
           {/* Instructions Card */}
-          {!result && !error && (
+          {!result && !comparisonResult && !error && (
             <div className="bg-accent/50 rounded-xl p-6 border border-accent animate-fade-in">
               <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
                 <Search className="w-5 h-5 text-primary" />
@@ -181,17 +227,17 @@ const Analyze = () => {
                   </div>
                   <div className="flex items-start gap-3">
                     <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0">2</span>
-                    <p><strong>Amazon Links:</strong> Paste full or shortened Amazon product URLs</p>
+                    <p><strong>Choose Algorithm:</strong> Select a sentiment analysis method to compare results</p>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
                     <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0">3</span>
-                    <p><strong>Flipkart Links:</strong> Paste Flipkart product page URLs</p>
+                    <p><strong>E-commerce Links:</strong> Paste Amazon or Flipkart product URLs</p>
                   </div>
                   <div className="flex items-start gap-3">
                     <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0">4</span>
-                    <p><strong>Get Results:</strong> View sentiment breakdown with confidence scores</p>
+                    <p><strong>Compare Results:</strong> See all algorithms compared with best performer highlighted</p>
                   </div>
                 </div>
               </div>
