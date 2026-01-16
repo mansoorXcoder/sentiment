@@ -1,6 +1,6 @@
 import { SentimentType, SentimentResult } from "./sentimentAnalyzer";
 
-export type AlgorithmType = "lexicon" | "naive-bayes" | "vader" | "textblob" | "bert";
+export type AlgorithmType = "neural-network" | "svm" | "naive-bayes" | "logistic-regression";
 
 export interface AlgorithmInfo {
   id: AlgorithmType;
@@ -25,39 +25,32 @@ export interface ComparisonResult {
 
 export const algorithms: AlgorithmInfo[] = [
   {
-    id: "lexicon",
-    name: "Lexicon-Based",
-    description: "Simple word matching using positive/negative word lists",
-    accuracy: 68,
-    speed: "fast",
+    id: "neural-network",
+    name: "Neural Network",
+    description: "Deep learning model with multiple hidden layers for pattern recognition",
+    accuracy: 89,
+    speed: "slow",
   },
   {
-    id: "naive-bayes",
-    name: "Naive Bayes",
-    description: "Probabilistic classifier based on word frequencies",
-    accuracy: 76,
-    speed: "fast",
-  },
-  {
-    id: "vader",
-    name: "VADER",
-    description: "Rule-based model tuned for social media sentiment",
-    accuracy: 82,
-    speed: "fast",
-  },
-  {
-    id: "textblob",
-    name: "TextBlob",
-    description: "Pattern-based sentiment analysis library",
-    accuracy: 74,
+    id: "svm",
+    name: "SVM",
+    description: "Support Vector Machine - finds optimal hyperplane for classification",
+    accuracy: 84,
     speed: "medium",
   },
   {
-    id: "bert",
-    name: "BERT Transformer",
-    description: "Deep learning model with contextual understanding",
-    accuracy: 91,
-    speed: "slow",
+    id: "naive-bayes",
+    name: "Naïve Bayes",
+    description: "Probabilistic classifier based on Bayes' theorem with independence assumption",
+    accuracy: 78,
+    speed: "fast",
+  },
+  {
+    id: "logistic-regression",
+    name: "Logistic Regression",
+    description: "Statistical model using sigmoid function for binary/multi-class classification",
+    accuracy: 81,
+    speed: "fast",
   },
 ];
 
@@ -84,46 +77,108 @@ const neutralIndicators = [
 const intensifiers = ["very", "really", "extremely", "absolutely", "totally", "highly"];
 const negations = ["not", "no", "never", "neither", "none", "nobody", "nothing"];
 
-function lexiconAnalysis(text: string): { sentiment: SentimentType; confidence: number } {
+// Neural Network simulation - uses weighted features and activation functions
+function neuralNetworkAnalysis(text: string): { sentiment: SentimentType; confidence: number } {
   const words = text.toLowerCase().split(/\s+/);
   
-  let positiveScore = 0;
-  let negativeScore = 0;
-  let neutralScore = 0;
+  // Simulate input layer
+  let inputFeatures = {
+    positiveCount: 0,
+    negativeCount: 0,
+    neutralCount: 0,
+    wordCount: words.length,
+    hasExclamation: text.includes("!"),
+    hasQuestion: text.includes("?"),
+  };
   
   words.forEach(word => {
     const cleanWord = word.replace(/[^a-z]/g, "");
-    if (positiveWords.includes(cleanWord)) positiveScore++;
-    if (negativeWords.includes(cleanWord)) negativeScore++;
-    if (neutralIndicators.includes(cleanWord)) neutralScore++;
+    if (positiveWords.includes(cleanWord)) inputFeatures.positiveCount++;
+    if (negativeWords.includes(cleanWord)) inputFeatures.negativeCount++;
+    if (neutralIndicators.includes(cleanWord)) inputFeatures.neutralCount++;
   });
   
-  const totalScore = positiveScore + negativeScore + neutralScore;
+  // Simulate hidden layer with ReLU activation
+  const hiddenLayer = [
+    Math.max(0, inputFeatures.positiveCount * 0.8 - inputFeatures.negativeCount * 0.3),
+    Math.max(0, inputFeatures.negativeCount * 0.8 - inputFeatures.positiveCount * 0.3),
+    Math.max(0, inputFeatures.neutralCount * 0.5 + (inputFeatures.hasExclamation ? 0.2 : 0)),
+  ];
+  
+  // Simulate output layer with softmax-like normalization
+  const outputSum = hiddenLayer[0] + hiddenLayer[1] + hiddenLayer[2] + 0.1;
+  const outputs = {
+    positive: hiddenLayer[0] / outputSum,
+    negative: hiddenLayer[1] / outputSum,
+    neutral: hiddenLayer[2] / outputSum + 0.3,
+  };
   
   let sentiment: SentimentType;
-  let confidence: number;
+  let maxOutput = Math.max(outputs.positive, outputs.negative, outputs.neutral);
   
-  if (totalScore === 0) {
-    sentiment = "neutral";
-    confidence = 0.5;
-  } else if (positiveScore > negativeScore && positiveScore > neutralScore) {
+  if (outputs.positive === maxOutput && inputFeatures.positiveCount > 0) {
     sentiment = "positive";
-    confidence = Math.min(0.92, 0.55 + (positiveScore / (totalScore * 2)));
-  } else if (negativeScore > positiveScore && negativeScore > neutralScore) {
+  } else if (outputs.negative === maxOutput && inputFeatures.negativeCount > 0) {
     sentiment = "negative";
-    confidence = Math.min(0.92, 0.55 + (negativeScore / (totalScore * 2)));
   } else {
     sentiment = "neutral";
-    confidence = Math.min(0.85, 0.45 + (neutralScore / (totalScore * 2)));
   }
   
+  const confidence = Math.min(0.96, 0.6 + maxOutput * 0.35);
   return { sentiment, confidence };
 }
 
+// SVM simulation - uses margin-based classification
+function svmAnalysis(text: string): { sentiment: SentimentType; confidence: number } {
+  const words = text.toLowerCase().split(/\s+/);
+  
+  // Create feature vector
+  let featureVector = 0;
+  let intensity = 0;
+  
+  words.forEach((word, index) => {
+    const cleanWord = word.replace(/[^a-z]/g, "");
+    
+    // Weight by position (words at beginning/end often more important)
+    const positionWeight = index < 3 || index > words.length - 3 ? 1.3 : 1.0;
+    
+    if (positiveWords.includes(cleanWord)) {
+      featureVector += 1 * positionWeight;
+      intensity += 1;
+    }
+    if (negativeWords.includes(cleanWord)) {
+      featureVector -= 1 * positionWeight;
+      intensity += 1;
+    }
+    
+    // Check for intensifiers
+    if (intensifiers.includes(cleanWord)) {
+      intensity += 0.5;
+    }
+  });
+  
+  // SVM decision boundary simulation
+  const margin = Math.abs(featureVector);
+  
+  let sentiment: SentimentType;
+  if (featureVector > 0.5) {
+    sentiment = "positive";
+  } else if (featureVector < -0.5) {
+    sentiment = "negative";
+  } else {
+    sentiment = "neutral";
+  }
+  
+  // Confidence based on distance from decision boundary
+  const confidence = Math.min(0.94, 0.55 + margin * 0.15 + intensity * 0.05);
+  return { sentiment, confidence };
+}
+
+// Naive Bayes - probabilistic classification
 function naiveBayesAnalysis(text: string): { sentiment: SentimentType; confidence: number } {
   const words = text.toLowerCase().split(/\s+/);
   
-  // Simulated prior probabilities
+  // Prior probabilities
   const priorPositive = 0.33;
   const priorNeutral = 0.34;
   const priorNegative = 0.33;
@@ -134,6 +189,8 @@ function naiveBayesAnalysis(text: string): { sentiment: SentimentType; confidenc
   
   words.forEach(word => {
     const cleanWord = word.replace(/[^a-z]/g, "");
+    
+    // Likelihood P(word|class)
     if (positiveWords.includes(cleanWord)) {
       logProbPositive += Math.log(0.7);
       logProbNeutral += Math.log(0.15);
@@ -162,101 +219,71 @@ function naiveBayesAnalysis(text: string): { sentiment: SentimentType; confidenc
   
   // Normalize for confidence
   const total = Math.exp(logProbPositive) + Math.exp(logProbNeutral) + Math.exp(logProbNegative);
-  const confidence = Math.min(0.94, 0.55 + Math.exp(maxProb) / total * 0.4);
+  const confidence = Math.min(0.92, 0.55 + Math.exp(maxProb) / total * 0.4);
   
   return { sentiment, confidence };
 }
 
-function vaderAnalysis(text: string): { sentiment: SentimentType; confidence: number } {
+// Logistic Regression - sigmoid-based classification
+function logisticRegressionAnalysis(text: string): { sentiment: SentimentType; confidence: number } {
   const words = text.toLowerCase().split(/\s+/);
   
-  let compoundScore = 0;
+  // Feature extraction with weights
+  let positiveScore = 0;
+  let negativeScore = 0;
+  
+  const weights = {
+    positive: 0.8,
+    negative: -0.8,
+    neutral: 0.1,
+    intensifier: 0.3,
+    negation: -0.5,
+  };
+  
   let prevWord = "";
   
   words.forEach(word => {
     const cleanWord = word.replace(/[^a-z]/g, "");
-    let wordScore = 0;
+    let wordWeight = 0;
     
-    if (positiveWords.includes(cleanWord)) wordScore = 1;
-    if (negativeWords.includes(cleanWord)) wordScore = -1;
-    if (neutralIndicators.includes(cleanWord)) wordScore = 0;
-    
-    // Check for intensifiers
-    if (intensifiers.includes(prevWord)) {
-      wordScore *= 1.5;
+    if (positiveWords.includes(cleanWord)) {
+      wordWeight = weights.positive;
+    } else if (negativeWords.includes(cleanWord)) {
+      wordWeight = weights.negative;
+    } else if (neutralIndicators.includes(cleanWord)) {
+      wordWeight = weights.neutral;
     }
     
-    // Check for negations
+    // Apply negation
     if (negations.includes(prevWord)) {
-      wordScore *= -0.75;
+      wordWeight *= -0.8;
     }
     
-    // Check for exclamation marks
-    if (word.includes("!")) {
-      wordScore *= 1.2;
+    // Apply intensifier
+    if (intensifiers.includes(prevWord)) {
+      wordWeight *= 1.4;
     }
     
-    compoundScore += wordScore;
+    if (wordWeight > 0) positiveScore += wordWeight;
+    else negativeScore += Math.abs(wordWeight);
+    
     prevWord = cleanWord;
   });
   
-  // Normalize compound score
-  const normalizedScore = compoundScore / Math.sqrt(compoundScore * compoundScore + 15);
+  // Sigmoid function simulation
+  const z = positiveScore - negativeScore;
+  const sigmoid = 1 / (1 + Math.exp(-z));
   
   let sentiment: SentimentType;
-  if (normalizedScore >= 0.05) {
+  if (sigmoid > 0.6) {
     sentiment = "positive";
-  } else if (normalizedScore <= -0.05) {
+  } else if (sigmoid < 0.4) {
     sentiment = "negative";
   } else {
     sentiment = "neutral";
   }
   
-  const confidence = Math.min(0.95, 0.6 + Math.abs(normalizedScore) * 0.35);
-  
-  return { sentiment, confidence };
-}
-
-function textBlobAnalysis(text: string): { sentiment: SentimentType; confidence: number } {
-  const words = text.toLowerCase().split(/\s+/);
-  
-  let polarity = 0;
-  let subjectivity = 0;
-  let wordCount = 0;
-  
-  words.forEach(word => {
-    const cleanWord = word.replace(/[^a-z]/g, "");
-    if (positiveWords.includes(cleanWord)) {
-      polarity += 0.5;
-      subjectivity += 0.6;
-      wordCount++;
-    } else if (negativeWords.includes(cleanWord)) {
-      polarity -= 0.5;
-      subjectivity += 0.6;
-      wordCount++;
-    } else if (neutralIndicators.includes(cleanWord)) {
-      polarity += 0.1;
-      subjectivity += 0.3;
-      wordCount++;
-    }
-  });
-  
-  if (wordCount > 0) {
-    polarity /= wordCount;
-    subjectivity /= wordCount;
-  }
-  
-  let sentiment: SentimentType;
-  if (polarity > 0.1) {
-    sentiment = "positive";
-  } else if (polarity < -0.1) {
-    sentiment = "negative";
-  } else {
-    sentiment = "neutral";
-  }
-  
-  const confidence = Math.min(0.93, 0.55 + Math.abs(polarity) * 0.4 + subjectivity * 0.1);
-  
+  const confidence = Math.min(0.93, 0.5 + Math.abs(sigmoid - 0.5) * 0.8);
   return { sentiment, confidence };
 }
 
@@ -311,18 +338,16 @@ function bertAnalysis(text: string): { sentiment: SentimentType; confidence: num
 
 export function analyzeWithAlgorithm(text: string, algorithmId: AlgorithmType): { sentiment: SentimentType; confidence: number } {
   switch (algorithmId) {
-    case "lexicon":
-      return lexiconAnalysis(text);
+    case "neural-network":
+      return neuralNetworkAnalysis(text);
+    case "svm":
+      return svmAnalysis(text);
     case "naive-bayes":
       return naiveBayesAnalysis(text);
-    case "vader":
-      return vaderAnalysis(text);
-    case "textblob":
-      return textBlobAnalysis(text);
-    case "bert":
-      return bertAnalysis(text);
+    case "logistic-regression":
+      return logisticRegressionAnalysis(text);
     default:
-      return lexiconAnalysis(text);
+      return naiveBayesAnalysis(text);
   }
 }
 
