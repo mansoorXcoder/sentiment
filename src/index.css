@@ -22,10 +22,10 @@
     --secondary-foreground: 220 20% 25%;
 
     --muted: 210 15% 94%;
-    --muted-foreground: 220 10% 50%;
+    --muted-foreground: 220 10% 40%;
 
     --accent: 174 50% 92%;
-    --accent-foreground: 174 62% 30%;
+    --accent-foreground: 174 62% 25%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -36,12 +36,12 @@
 
     --radius: 0.75rem;
 
-    /* Sentiment colors */
-    --positive: 152 69% 45%;
+    /* Sentiment colors - adjusted for WCAG 4.5:1 contrast */
+    --positive: 152 69% 30%;
     --positive-light: 152 60% 94%;
-    --neutral: 43 96% 56%;
+    --neutral: 43 96% 35%;
     --neutral-light: 43 90% 92%;
-    --negative: 4 90% 58%;
+    --negative: 4 90% 40%;
     --negative-light: 4 80% 94%;
 
     /* Gradient */
@@ -145,7 +145,7 @@
 
   .sentiment-positive {
     @apply bg-positive-light text-positive border-positive;
-    --positive: 152 69% 45%;
+    --positive: 152 69% 28%;
     color: hsl(var(--positive));
     background-color: hsl(var(--positive-light));
     border-color: hsl(var(--positive) / 0.3);
@@ -153,7 +153,7 @@
 
   .sentiment-neutral {
     @apply bg-neutral-light text-neutral border-neutral;
-    --neutral: 43 96% 40%;
+    --neutral: 43 96% 32%;
     color: hsl(var(--neutral));
     background-color: hsl(var(--neutral-light));
     border-color: hsl(var(--neutral) / 0.3);
@@ -161,7 +161,7 @@
 
   .sentiment-negative {
     @apply bg-negative-light text-negative border-negative;
-    --negative: 4 90% 50%;
+    --negative: 4 90% 38%;
     color: hsl(var(--negative));
     background-color: hsl(var(--negative-light));
     border-color: hsl(var(--negative) / 0.3);
