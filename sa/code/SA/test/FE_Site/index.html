@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sentiment Analysis FE</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Sentiment Analysis</h1>
+    <div class="card">
+      <label for="text">Enter text</label>
+      <textarea id="text" placeholder="Type text here..."></textarea>
+      <label for="model">Model (optional)</label>
+      <select id="model"></select>
+      <button id="analyze">Analyze</button>
+      <div id="result" class="result"></div>
+    </div>
+  </div>
+
+  <script>
+    const apiBase = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') 
+      ? 'http://localhost:8000' 
+      : `${location.protocol}//${location.hostname}:8000`;
+
+    async function loadModels() {
+      const sel = document.getElementById('model');
+      sel.innerHTML = '<option value="">All Models</option>';
+      try {
+        const res = await fetch(`${apiBase}/models`);
+        const data = await res.json();
+        (data.models || []).forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m; opt.textContent = m; sel.appendChild(opt);
+        });
+      } catch {}
+    }
+
+    async function analyze() {
+      const text = document.getElementById('text').value.trim();
+      const model = document.getElementById('model').value || null;
+      const resBox = document.getElementById('result');
+      if (!text) { resBox.textContent = 'Please enter text.'; return; }
+      resBox.textContent = 'Analyzing...';
+      try {
+        const res = await fetch(`${apiBase}/predict`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, model })
+        });
+        const data = await res.json();
+        resBox.textContent = JSON.stringify(data, null, 2);
+      } catch (e) {
+        resBox.textContent = 'Error: ' + e.message;
+      }
+    }
+
+    document.getElementById('analyze').addEventListener('click', analyze);
+    loadModels();
+  </script>
+</body>
+</html>
+
+
