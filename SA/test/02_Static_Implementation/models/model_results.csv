@@ -1,0 +1,5 @@
+Model,Accuracy,Precision,Recall,F1-Score,CV Mean,CV Std
+Logistic Regression,1.0,1.0,1.0,1.0,,
+Naive Bayes,1.0,1.0,1.0,1.0,0.95,0.09999999999999999
+SVM,1.0,1.0,1.0,1.0,,
+Neural Network,1.0,1.0,1.0,1.0,0.95,0.09999999999999999
